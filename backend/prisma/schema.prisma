@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String?
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tasks     Task[]
+  @@map("user")
+}
+
+model Project {
+  id             String   @id @default(uuid())
+  title          String   @unique
+  description    String
+  createdAt      DateTime @default(now()) @map("created_at")
+  taskCategories TaskCategory[]
+  @@map("project")
+}
+
+model TaskCategory {
+  id        String   @id @default(uuid())
+  title     String   @unique
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tasks     Task[]
+  project   Project?  @relation(fields: [projectId], references: [id])
+  projectId String?   @map("project_id")
+  @@map("task_category")
+}
+
+model Task {
+  id             String       @id @default(uuid())
+  title          String
+  priority       Priority?
+  order          Int          @default(0)
+  description    String?
+  completed      Boolean      @default(false)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id])
+  taskCategoryId String       @map("task_category_id")
+  taskCategory   TaskCategory @relation(fields: [taskCategoryId], references: [id])
+  @@map("task")
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
